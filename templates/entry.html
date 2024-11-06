@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    body {
+      font-family: Arial;
+    }
+    #map { height: 400px; 
+         width: 400px;}
+  </style>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+     crossorigin=""/>
+  <body>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+     crossorigin=""></script>
+    <h1>Record Sighting</h1>
+    <a href='{{url_for('home')}}'><button>Home</button></a>
+    <form method='post' onsubmit='return confirm("Submit UFO sighting? 🛸");'>
+      <label>Date: </label><input id='date' name='date' type='date' required><br>
+      <label>Time: </label><input id='time' name='time' type='time' required><br>
+      <label>City: </label><input id='city' name='city' type='text' required><br>
+      <label>State: </label><input id='state' name='state' type='text' required><br>
+      <label>Country: </label>
+        <select id='country' name='country' required>
+          {% for name in countries %}
+          <option value='{{name[0]}}'>{{name[1]}}</option>
+          {% endfor%}
+        </select><br>
+      <label>Shape: </label><input id='shape' name='shape' type='text' required><br>
+      <label>Encounter length (seconds): </label><input id='encounter_length' name='encounter_length' type='number' required><br>
+      <label>Encounter length (words): </label><input id='described_encounter_length' name='described_encounter_length' type='text' required><br>
+      <label>Description: </label><textarea id='description' name='description' required></textarea><br>
+
+      <div id="map"></div>
+      <input id='latitude' name='latitude' type='number' value='0' step=any required>
+      <input id='longitude' name='longitude' type='number' value='0' step=any required><br>
+      <button type='submit'>Submit</button>
+    </form>
+  </body>
+  <script>
+    var map = L.map('map', {minZoom: 1, maxZoom: 20}).setView([0, 0], 1);
+     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+     noWrap: true,
+     maxZoom: 20,
+     minZoom: 1,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+  var popup = L.popup();
+
+function onMapClick(e) {
+    popup
+        .setLatLng(e.latlng)
+        .setContent("Record sighting at (" + e.latlng.lat + ', ' + e.latlng.lng + ') ?')
+        .openOn(map);
+  lat = document.getElementById('latitude');
+  lat.value = e.latlng.lat;
+  lng = document.getElementById('longitude');
+  lng.value = e.latlng.lng;
+}
+
+map.on('click', onMapClick);
+  </script>
+</html>

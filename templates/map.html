@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+     crossorigin=""/>
+
+  <style>
+    body {
+      font-family: Arial;
+    }
+
+    #map { height: 600px; 
+         width: 600px;}
+    table, tr, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      
+    }
+
+
+  </style>
+ <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+     crossorigin=""></script>
+  <h1>UFO Sightings {{data[-1]}} <a href='{{url_for('home')}}'><button>home</button></a></h1>
+  <div class='visual'>
+   <div id="map"></div>
+
+  <form action="{{ url_for("map")}}" method="post">
+    <p>Filter by:</p>
+    
+    <input type='checkbox' name='countryCheck' id='countryCheckbox' onclick='countryChange()'><label for='countryCheckbox'>Country</label><br>
+    <div id='countryfilter' style='display:none'>
+      <label>Country name: </label><select  name='country' id='country'>
+      
+        {% for name in names %}
+          <option value="{{name[0]}}">{{name[1]}}</option>
+        {%endfor%}
+      </select>
+    </div>
+    
+    <input type='checkbox' name='cityCheck' id='cityCheckbox' onclick='cityChange()'><label for='cityCheckbox'>City</label><br>
+    <div id='cityfilter' style='display:none'>
+      <label>City: </label><input list='cities' name='city' id='city'><br>
+        <datalist id='cities'>
+          {% for city, full in cities.items() %}
+            <option value='{{full}}'>{{city}}</option>
+          {%endfor%}
+        </datalist>
+    </div>
+    
+    <input type='checkbox' name='durationCheck' id='durationCheckbox' onclick='durationChange()'><label for='durationCheckbox'>Duration</label><br>
+    <div id='durationfilter' style='display:none'>
+    <label>Maximum duration in seconds: </label><input type='number' name ='duration' min='0' id='duration'></div>
+    
+    <input type='checkbox' name='timeCheck' id='timeCheckbox' onclick='timeChange()' step='300'><label for='timeCheckbox'>Time</label><br>
+      <div id='timefilter' style='display:none'>
+        <input type='time' id='firsttime' name='firsttime'>
+      </div>
+    
+    <input type='checkbox' name='dateCheck' id='dateCheckbox' onclick='dateChange()'><label for='dateCheckbox'>Date</label><br>
+    <div id='datefilter' style='display:none'>
+      <select name='date_type' id='date_type' onchange='modifyDate()'>
+        <option value='on' selected>On</option>
+        <option value='between'>Between</option>
+        <option value='until'>Before</option>
+        <option value='after'>After</option>
+      </select><br>
+      <input type='date' id='firstdate' name='firstdate'><div id='second' style='display:none'> and <input type='date' id='seconddate' name='seconddate'></div>
+    </div>
+    <button type='submit'>Filter</button>
+  </form>
+  </div>
+
+  <div class='tablee'>
+  <table>
+    <tr>
+      <th>Location</th>
+      <th>Date & time</th>
+      <th>Country</th>
+      <th>Shape</th>
+      <th>Duration</th>
+      <th>City</th>
+    </tr>
+    {% for row in data[:-1] %}
+      <tr>
+        <td>{{row[0]}}, {{row[1]}}</td>
+        <td>{{row[2]}}</td>
+        <td>{{row[3]}}</td>
+        <td>{{row[7]}}</td>
+        <td>{{row[8]}}</td>
+        <td>{{row[9]}}</td>
+      </tr>
+    {% endfor %}
+    </table>
+  </div>
+ <script>
+   function countryChange() {
+  // Get the checkbox
+  var checkBox = document.getElementById("countryCheckbox");
+  // Get the output text
+  var text = document.getElementById("countryfilter");
+  var input = document.getElementById("country");
+  input.required=false;
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+    input.required=true;
+  } else {
+    text.style.display = "none";
+  }
+}
+
+   function cityChange() {
+  // Get the checkbox
+  var checkBox = document.getElementById("cityCheckbox");
+  // Get the output text
+  var text = document.getElementById("cityfilter");
+  var input = document.getElementById('city');
+  input.required = false;
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+    input.required=true;
+  } else {
+    text.style.display = "none";
+  }
+}
+
+   function stateChange() {
+  // Get the checkbox
+  var checkBox = document.getElementById("stateCheckbox");
+  // Get the output text
+  var text = document.getElementById("statefilter");
+  var input = document.getElementById('state');
+  input.required = false;
+  // If the checkbox is checked, display the output text
+  if (checkBox.checked == true){
+    text.style.display = "block";
+    input.required=true;
+  } else {
+    text.style.display = "none";
+  }
+}
+
+   function durationChange() {
+     var checkBox = document.getElementById('durationCheckbox');
+     var text = document.getElementById('durationfilter');
+     var input = document.getElementById('duration');
+  input.required=false;
+     if (checkBox.checked == true){
+       text.style.display = 'block';
+       input.required=true;
+     }
+     else { text.style.display = 'none';}
+   }
+
+   function dateChange() {
+     var checkBox = document.getElementById('dateCheckbox');
+     var text = document.getElementById('datefilter');
+     var finput = document.getElementById('firstdate');
+     var sinput = document.getElementById('seconddate');
+     var option = document.getElementById('date_type');
+     finput.required=false;
+     sinput.required = false;
+     if (checkBox.checked == true){
+       text.style.display = 'block';
+       finput.required=true;
+       if (option.value == 'between'){
+       sinput.required = true;}
+     }
+     else { text.style.display = 'none';}
+   }
+
+   function modifyDate(){
+     var option = document.getElementById('date_type');
+     var second = document.getElementById('second');
+     second.style.display = 'none';
+     if (option.value == 'between'){
+       second.style.display = 'inline';
+     }
+   }
+
+   function timeChange(){
+     var checkBox = document.getElementById('timeCheckbox');
+     var text = document.getElementById('timefilter');
+     var input = document.getElementById('firsttime');
+     input.required = false;
+     if (checkBox.checked == true){
+       text.style.display = 'block';
+       //input.required=true;
+     }
+     else { text.style.display = 'none';}
+   }
+   
+   var map = L.map('map', {minZoom: 1, maxZoom: 20}).setView([0, 0], 1);
+   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+     noWrap: true,
+     maxZoom: 20,
+     minZoom: 1,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+{% for row in data[:-1] %}
+  var AlienIcon = L.icon({
+    iconUrl: "static/{{row[5]}}",
+    iconSize: [30, 30],
+    iconAnchor: {{row[6]}},
+    popupAnchor: [0, 0]
+  });
+   
+   var marker = L.marker([{{row[0]}}, {{row[1]}}], {icon: AlienIcon},{alt: 'Alien'}).addTo(map);
+   var text = "<b>UFO sighting🛸 {{row[2]}}</b><br> {{row[4]}}";
+   marker.bindPopup(text);
+   {% endfor %}
+     </script>
+</html>
